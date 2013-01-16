@@ -13,16 +13,16 @@ import datetime
 import urllib2
 import socket
 from collections import defaultdict
-#cybox bindings
-import cybox_common_types_1_0 as common
-import cybox_core_1_0 as cybox
-import email_message_object_1_2 as email_message_object
-import uri_object_1_2 as uri_object
-import file_object_1_3 as file_object
-import address_object_1_2 as address_object
-import whois_object_1_0 as whois_object
-import dns_query_object_1_0 as dns_query_object
-import dns_record_object_1_1 as dns_record_object
+
+import cybox.bindings.cybox_common_types_1_0 as common
+import cybox.bindings.cybox_core_1_0 as core
+import cybox.bindings.email_message_object_1_2 as email_message_object
+import cybox.bindings.uri_object_1_2 as uri_object
+import cybox.bindings.file_object_1_3 as file_object
+import cybox.bindings.address_object_1_2 as address_object
+import cybox.bindings.whois_object_1_0 as whois_object
+import cybox.bindings.dns_query_object_1_0 as dns_query_object
+import cybox.bindings.dns_record_object_1_1 as dns_record_object
 
 #pip install dnspython
 import dns.resolver
@@ -247,9 +247,9 @@ class email_translator:
             self.relationships.append({'idref':idref, 'type':type_, 'relationship':relationship})
         
         def get_relationship_objects(self):
-            related_objects = cybox.RelatedObjectsType()
+            related_objects = core.RelatedObjectsType()
             for r in self.relationships:
-                related_object = cybox.RelatedObjectType(idref = r['idref'], type_ = r['type'], relationship = r['relationship'])
+                related_object = core.RelatedObjectType(idref = r['idref'], type_ = r['type'], relationship = r['relationship'])
                 related_objects.add_Related_Object(related_object)
             return related_objects
             
@@ -1139,10 +1139,10 @@ class email_translator:
         child objects).
     """
     def __add_related_objects(self, obj, idref, type_, relationship="Contained Within"):
-        related_object = cybox.RelatedObjectType(idref = idref, type_ = type_, relationship = relationship)
+        related_object = core.RelatedObjectType(idref = idref, type_ = type_, relationship = relationship)
         related_objects = obj.get_Related_Objects()
         if not related_objects:
-            related_objects = cybox.RelatedObjectsType()
+            related_objects = core.RelatedObjectsType()
             obj.set_Related_Objects(related_objects)
             
         related_objects.add_Related_Object(related_object)
@@ -1171,11 +1171,11 @@ class email_translator:
         return email_message_obj
 
     def __create_cybox_observable(self, obj_container):
-        observable   = cybox.ObservableType(id = self.__create_cybox_id("observable"))
-        cybox_object = cybox.ObjectType(id = obj_container.idref)
+        observable   = core.ObservableType(id = self.__create_cybox_id("observable"))
+        cybox_object = core.ObjectType(id = obj_container.idref)
         cybox_object.set_Defined_Object(obj_container.obj)
         cybox_object.set_Related_Objects(obj_container.get_relationship_objects())
-        stateful_measure = cybox.StatefulMeasureType()    
+        stateful_measure = core.StatefulMeasureType()    
         stateful_measure.set_Object(cybox_object)
         observable.set_Stateful_Measure(stateful_measure)
         
@@ -1192,17 +1192,17 @@ class email_translator:
     """ Generates a CybOX Observable Document from the input map of CybOX Objects."""
     def __create_cybox_observables(self, map_objs):
         # set up the email observable
-        email_observable = cybox.ObservableType(id = self.__create_cybox_id("observable"))   
+        email_observable = core.ObservableType(id = self.__create_cybox_id("observable"))   
         email_obj_map =  map_objs['message']
         (email_id, email_obj) = email_obj_map.iteritems().next()
-        email_stateful_measure = cybox.StatefulMeasureType()
-        cybox_email_obj = cybox.ObjectType(id = email_id)
+        email_stateful_measure = core.StatefulMeasureType()
+        cybox_email_obj = core.ObjectType(id = email_id)
         cybox_email_obj.set_Defined_Object(email_obj)
         cybox_email_obj.set_Related_Objects(self.__get_email_obj_container().get_relationship_objects())
         email_stateful_measure.set_Object(cybox_email_obj)
         email_observable.set_Stateful_Measure(email_stateful_measure)
         list_observables = [email_observable]
-        root_observables = cybox.ObservablesType(cybox_major_version = "1", cybox_minor_version= "0", Observable = list_observables)
+        root_observables = core.ObservablesType(cybox_major_version = "1", cybox_minor_version= "0", Observable = list_observables)
         
         if self.is_enabled_include_attachments() and (not self.is_enabled_inline_files()):
             list_observables.extend(self.__create_cybox_observable_list(map_objs['files']))
